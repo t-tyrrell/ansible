@@ -1,0 +1,88 @@
+---
+- name: Test rsyslog remote logging functionality
+  hosts: all
+  become: yes
+  vars:
+    log_server: "holocron.northshore.local"
+    log_server_port: "514"
+    test_message: "ANSIBLE_TEST_LOG_{{ ansible_hostname }}_{{ ansible_date_time.epoch }}"
+  
+  tasks:
+    - name: Verify rsyslog is running
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: started
+      register: rsyslog_status
+
+    - name: Display rsyslog status
+      ansible.builtin.debug:
+        msg: "Rsyslog service is {{ rsyslog_status.status.ActiveState }}"
+
+    - name: Check network connectivity to log server (TCP)
+      ansible.builtin.wait_for:
+        host: "{{ log_server }}"
+        port: "{{ log_server_port }}"
+        timeout: 5
+        state: started
+      register: connectivity_check
+      failed_when: false
+
+    - name: Display connectivity results
+      ansible.builtin.debug:
+        msg: "{{ 'SUCCESS: Can reach ' + log_server + ':' + log_server_port if connectivity_check.failed == false else 'FAILED: Cannot reach ' + log_server + ':' + log_server_port }}"
+
+    - name: Check if remote-logging.conf exists
+      ansible.builtin.stat:
+        path: /etc/rsyslog.d/remote-logging.conf
+      register: config_file
+
+    - name: Fail if config file doesn't exist
+      ansible.builtin.fail:
+        msg: "Remote logging configuration file not found!"
+      when: not config_file.stat.exists
+
+    - name: Send test log message via logger command
+      ansible.builtin.command: logger -t "ANSIBLE_TEST" "{{ test_message }}"
+      changed_when: true
+
+    - name: Display test message sent
+      ansible.builtin.debug:
+        msg: 
+          - "Test message sent from {{ ansible_hostname }}"
+          - "Message: {{ test_message }}"
+          - "Search for this message on {{ log_server }}"
+
+    - name: Check local rsyslog for errors
+      ansible.builtin.command: journalctl -u rsyslog -n 20 --no-pager
+      register: rsyslog_journal
+      changed_when: false
+
+    - name: Display recent rsyslog journal entries
+      ansible.builtin.debug:
+        msg: "{{ rsyslog_journal.stdout_lines }}"
+
+    - name: Check rsyslog stats (if imuxsock loaded)
+      ansible.builtin.shell: |
+        if pgrep rsyslogd > /dev/null; then
+          echo "stats" | nc -U /var/run/rsyslog/rsyslog.stats 2>/dev/null || echo "Stats socket not available"
+        fi
+      register: rsyslog_stats
+      changed_when: false
+      failed_when: false
+
+    - name: Summary - What to check on log server
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "TEST COMPLETE FOR: {{ ansible_hostname }}"
+          - "=========================================="
+          - "Test message sent: {{ test_message }}"
+          - ""
+          - "On the log server ({{ log_server }}), run:"
+          - "  grep '{{ test_message }}' /var/log/messages"
+          - "  OR"
+          - "  journalctl | grep '{{ test_message }}'"
+          - ""
+          - "Network connectivity: {{ 'OK' if connectivity_check.failed == false else 'FAILED' }}"
+          - "Config file present: {{ 'YES' if config_file.stat.exists else 'NO' }}"
+          - "=========================================="

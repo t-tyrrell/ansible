@@ -1,0 +1,7 @@
+---
+# Non-production environment specific variables
+
+environment: development
+monitoring_enabled: false
+
+

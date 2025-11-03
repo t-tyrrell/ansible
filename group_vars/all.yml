@@ -1,0 +1,20 @@
+---
+# Global variables for all hosts
+
+# Authentication
+ansible_user: service-satellite
+ansible_ssh_private_key_file: /home/service-satellite/.ssh/id_ed25519_ansible
+
+# Domain configuration
+domain_name: northshore.local
+
+# Automatically construct FQDN for all hosts
+ansible_host: "{{ inventory_hostname }}.{{ domain_name }}"
+
+# Common settings
+ansible_python_interpreter: /usr/bin/python3
+
+# Logging configuration
+log_server: "holocron.{{ domain_name }}"
+log_server_port: "514"
+log_protocol: "tcp"

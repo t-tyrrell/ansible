@@ -1,0 +1,58 @@
+--- 
+- name: Configure firewalld
+  hosts: test
+  become: true
+  
+  vars:
+    # Backup original sshd_config
+    backup_sshd_config: true
+    # Restart SSH service after changes
+    restart_ssh: true
+
+  tasks:
+          
+     - name: Backup current sshd_config
+       ansible.builtin.copy:
+        src: /etc/ssh/sshd_config
+        dest: /etc/ssh/sshd_config.backup.{{ ansible_date_time.iso8601_basic_short }}
+        remote_src: yes
+        mode: '0600'
+       when: backup_sshd_config | bool
+
+     - name: Disable root login via SSH
+       ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PermitRootLogin'
+        line: 'PermitRootLogin no'
+        state: present
+        backup: yes
+       notify: Restart sshd
+
+     - name: Validate sshd_config syntax
+       ansible.builtin.command:
+        cmd: sshd -t
+       register: sshd_test
+       changed_when: false
+       failed_when: sshd_test.rc != 0
+
+     - name: Display validation result
+       ansible.builtin.debug:
+        msg: "SSH configuration is valid ✓"
+       when: sshd_test.rc == 0
+
+     - name: Get new PermitRootLogin setting
+       ansible.builtin.shell:
+        cmd: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+       register: new_root_setting
+       changed_when: false
+
+     - name: Display new setting
+       ansible.builtin.debug:
+        msg: "New setting: {{ new_root_setting.stdout }}"
+
+  handlers:
+     - name: Restart sshd
+       ansible.builtin.service:
+        name: sshd
+        state: restarted
+       when: restart_ssh | bool

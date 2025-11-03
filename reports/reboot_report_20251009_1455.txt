@@ -1,0 +1,4 @@
+Post-Patching Reboot Report
+Date: 2025-10-09 14:55:33
+=====================================
+cass-redhat.northshore.local: needs-restarting exit code = 0

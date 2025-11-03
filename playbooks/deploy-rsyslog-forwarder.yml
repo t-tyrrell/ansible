@@ -1,0 +1,82 @@
+---
+- name: Configure RSyslog Forwarding to holocron
+  hosts: all
+  become: yes
+  tasks:
+    - name: Backup existing rsyslog configs
+      shell: |
+        mkdir -p /root/rsyslog-backup-$(date +%Y%m%d)
+        cp -r /etc/rsyslog.d/* /root/rsyslog-backup-$(date +%Y%m%d)/ 2>/dev/null || true
+      changed_when: false
+    
+    - name: Remove any conflicting forward configs
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/rsyslog.d/50-forward-to-holocron.conf
+        - /etc/rsyslog.d/forward-to-holocron.conf
+        - /etc/rsyslog.d/remote-logging.conf
+      ignore_errors: yes
+    
+    - name: Create clean rsyslog forwarding configuration
+      copy:
+        dest: /etc/rsyslog.d/50-forward-to-holocron.conf
+        mode: '0644'
+        content: |
+          # ============================================================
+          # FORWARD LOGS TO HOLOCRON - Central Syslog Server
+          # ============================================================
+          # NOTE: Do not load modules here - they're loaded in main config
+          
+          # Forward to holocron using TCP (reliable)
+          # Authentication logs
+          authpriv.* @@holocron:514
+          
+          # System messages  
+          *.info;mail.none;authpriv.none;cron.none @@holocron:514
+          
+          # Kernel messages
+          kern.* @@holocron:514
+          
+          # Errors and critical
+          *.err @@holocron:514
+          *.crit @@holocron:514
+          
+          # Keep local copies
+          authpriv.* /var/log/secure
+          *.info;mail.none;authpriv.none;cron.none /var/log/messages
+    
+    - name: Test rsyslog configuration (allow warnings)
+      command: rsyslogd -N1
+      register: rsyslog_test
+      failed_when: false
+      changed_when: false
+    
+    - name: Display any rsyslog warnings (informational)
+      debug:
+        msg: "{{ rsyslog_test.stderr_lines }}"
+      when: rsyslog_test.stderr_lines | length > 0
+    
+    - name: Restart rsyslog service
+      systemd:
+        name: rsyslog
+        state: restarted
+        enabled: yes
+    
+    - name: Wait for rsyslog to stabilize
+      wait_for:
+        timeout: 2
+    
+    - name: Verify rsyslog is running
+      systemd:
+        name: rsyslog
+        state: started
+      register: rsyslog_status
+    
+    - name: Send test log
+      shell: logger -t ANSIBLE_DEPLOY "Log forwarding configured to holocron from $(hostname) at $(date)"
+    
+    - name: Report success
+      debug:
+        msg: "✓ Successfully configured {{ inventory_hostname }} to forward logs to holocron"

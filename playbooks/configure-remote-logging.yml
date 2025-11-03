@@ -1,0 +1,72 @@
+---
+- name: Deploy rsyslog remote logging configuration
+  hosts: all
+  become: yes
+  vars:
+    rsyslog_remote_config: "remote-logging.conf"
+    rsyslog_config_dir: "/etc/rsyslog.d"
+    log_server: "holocron.northshore.local"
+    log_server_port: "514"
+    log_protocol: "tcp"
+  
+  tasks:
+    - name: Ensure rsyslog is installed
+      ansible.builtin.dnf:
+        name: rsyslog
+        state: present
+
+    - name: Ensure rsyslog service is enabled
+      ansible.builtin.systemd:
+        name: rsyslog
+        enabled: yes
+
+    - name: Ensure rsyslog service is started
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: started
+
+    - name: Backup existing remote logging config (if exists)
+      ansible.builtin.copy:
+        src: "{{ rsyslog_config_dir }}/{{ rsyslog_remote_config }}"
+        dest: "{{ rsyslog_config_dir }}/{{ rsyslog_remote_config }}.backup.{{ ansible_date_time.epoch }}"
+        remote_src: yes
+      when: lookup('ansible.builtin.fileglob', rsyslog_config_dir + '/' + rsyslog_remote_config, errors='ignore')
+      failed_when: false
+
+    - name: Deploy remote logging configuration file
+      ansible.builtin.copy:
+        dest: "{{ rsyslog_config_dir }}/{{ rsyslog_remote_config }}"
+        content: |
+          *.* action(type="omfwd"
+              queue.type="linkedlist"
+              queue.filename="example_fwd"
+              action.resumeRetryCount="-1"
+              queue.saveOnShutdown="on"
+              target="{{ log_server }}" port="{{ log_server_port }}" protocol="{{ log_protocol }}"
+          )
+        owner: root
+        group: root
+        mode: '0644'
+      notify: restart rsyslog
+
+    - name: Verify rsyslog configuration syntax
+      ansible.builtin.command: rsyslogd -N1
+      register: rsyslog_syntax_check
+      changed_when: false
+      failed_when: rsyslog_syntax_check.rc != 0
+
+    - name: Display syntax check results
+      ansible.builtin.debug:
+        msg: "Rsyslog configuration syntax is valid"
+      when: rsyslog_syntax_check.rc == 0
+
+  handlers:
+    - name: restart rsyslog
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: restarted
+      
+    - name: verify rsyslog restarted successfully
+      ansible.builtin.systemd:
+        name: rsyslog
+        state: started

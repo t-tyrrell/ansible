@@ -1,0 +1,97 @@
+--- 
+- name: Remove firewall rich rules
+  hosts: git.northshore.local
+  become: true
+
+  vars:
+    target_zone: public
+    backup_rules: true
+    confirm_removal: false  
+
+  tasks:
+    - name: Display current rich rules (before removal)
+      ansible.builtin.command:
+        cmd: firewall-cmd --list-rich-rules --zone={{ target_zone }}
+      register: rules_before
+      changed_when: false
+      tags:
+        - always
+    
+    - name: Show rules that will be removed
+      ansible.builtin.debug:
+        msg: 
+          - "Current rich rules in zone '{{ target_zone }}':"
+          - "{{ rules_before.stdout_lines }}"
+          - "Total rules to remove: {{ rules_before.stdout_lines | length }}"
+      tags:
+        - always
+
+    - name: Get all current rich rules (permanent config)
+      ansible.builtin.command:
+        cmd: firewall-cmd --list-rich-rules --zone={{ target_zone }} --permanent
+      register: permanent_rich_rules
+      changed_when: false
+      tags:
+        - remove
+
+    - name: Remove each rich rule using ansible.posix
+      ansible.posix.firewalld:
+        rich_rule: "{{ item }}"
+        zone: "{{ target_zone }}"
+        permanent: true
+        immediate: true
+        state: disabled
+      loop: "{{ permanent_rich_rules.stdout_lines }}"
+      when: permanent_rich_rules.stdout_lines | length > 0
+      tags:
+        - remove
+
+    - name: Reload firewalld to apply all changes
+      ansible.builtin.command:
+        cmd: firewall-cmd --reload
+      changed_when: false
+      tags:
+        - reload
+
+    - name: Verify all rich rules removed
+      ansible.builtin.command:
+        cmd: firewall-cmd --list-rich-rules --zone={{ target_zone }}
+      register: rules_after
+      changed_when: false
+      tags:
+        - verify
+        - always
+
+    - name: Display final state
+      ansible.builtin.debug:
+        msg: "{{ 'SUCCESS: All rich rules removed' if rules_after.stdout_lines | length == 0 else 'WARNING: ' ~ (rules_after.stdout_lines | length) ~ ' rules still exist' }}"
+      tags:
+        - verify
+        - always
+
+    - name: Show remaining rules (if any)
+      ansible.builtin.debug:
+        msg: "Remaining rules: {{ rules_after.stdout_lines }}"
+      when: rules_after.stdout_lines | length > 0
+      tags:
+        - verify
+
+    - name: Report removal summary
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Rich Rules Removal Summary"
+          - "=========================================="
+          - "Host: {{ inventory_hostname }}"
+          - "Zone: {{ target_zone }}"
+          - "Rules before: {{ rules_before.stdout_lines | length }}"
+          - "Rules after: {{ rules_after.stdout_lines | length }}"
+          - "Rules removed: {{ rules_before.stdout_lines | length - rules_after.stdout_lines | length }}"
+          - "Backup created: {{ backup_rules }}"
+          - "=========================================="
+      tags:
+        - always
+
+
+
+

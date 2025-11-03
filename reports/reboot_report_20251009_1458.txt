@@ -1,0 +1,4 @@
+Post-Patching Reboot Report
+Date: 2025-10-09 14:58:55
+=====================================
+nscc-dxesa-003.northshore.local: needs-restarting exit code = 0

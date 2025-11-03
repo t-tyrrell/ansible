@@ -1,0 +1,73 @@
+---
+- name: Check rsyslog status and configuration
+  hosts: all
+  become: yes
+  
+  tasks:
+    - name: Check if rsyslog package is installed
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Display rsyslog installation status
+      ansible.builtin.debug:
+        msg: "rsyslog is {{ 'installed' if 'rsyslog' in ansible_facts.packages else 'NOT installed' }}"
+
+    - name: Get rsyslog service status
+      ansible.builtin.systemd:
+        name: rsyslog
+      register: rsyslog_service
+      failed_when: false
+
+    - name: Display rsyslog service status
+      ansible.builtin.debug:
+        msg: |
+          Service State: {{ rsyslog_service.status.ActiveState | default('unknown') }}
+          Service Enabled: {{ rsyslog_service.status.UnitFileState | default('unknown') }}
+          Service Running: {{ rsyslog_service.status.SubState | default('unknown') }}
+
+    - name: Check if remote logging configuration exists
+      ansible.builtin.stat:
+        path: /etc/rsyslog.d/remote-logging.conf
+      register: remote_config
+
+    - name: Display remote logging configuration status
+      ansible.builtin.debug:
+        msg: "Remote logging config: {{ 'EXISTS' if remote_config.stat.exists else 'NOT FOUND' }}"
+
+    - name: Show remote logging configuration content (if exists)
+      ansible.builtin.slurp:
+        src: /etc/rsyslog.d/remote-logging.conf
+      register: config_content
+      when: remote_config.stat.exists
+      failed_when: false
+
+    - name: Display configuration content
+      ansible.builtin.debug:
+        msg: "{{ config_content['content'] | b64decode }}"
+      when: remote_config.stat.exists
+
+    - name: Check rsyslog configuration syntax
+      ansible.builtin.command: rsyslogd -N1
+      register: syntax_check
+      changed_when: false
+      failed_when: false
+      when: "'rsyslog' in ansible_facts.packages"
+
+    - name: Display syntax check results
+      ansible.builtin.debug:
+        msg: "Rsyslog config syntax: {{ 'VALID' if syntax_check.rc == 0 else 'INVALID - ' + syntax_check.stderr }}"
+      when: 
+        - "'rsyslog' in ansible_facts.packages"
+        - syntax_check is defined
+
+    - name: Create summary report
+      ansible.builtin.debug:
+        msg:
+          - "========== RSYSLOG STATUS SUMMARY =========="
+          - "Hostname: {{ ansible_hostname }}"
+          - "Rsyslog Installed: {{ 'YES' if 'rsyslog' in ansible_facts.packages else 'NO' }}"
+          - "Service Active: {{ rsyslog_service.status.ActiveState | default('N/A') }}"
+          - "Service Enabled: {{ rsyslog_service.status.UnitFileState | default('N/A') }}"
+          - "Remote Config Present: {{ 'YES' if remote_config.stat.exists else 'NO' }}"
+          - "Config Syntax Valid: {{ 'YES' if syntax_check.rc == 0 else 'NO' }}"
+          - "==========================================="

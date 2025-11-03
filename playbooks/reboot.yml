@@ -1,0 +1,86 @@
+---
+# post_patch_reboot.yml
+- name: Post-Patching Reboot Process
+  hosts: all
+  gather_facts: yes
+  serial: 1  # Process one at a time for control
+  
+  vars:
+    reboot_timeout: 600
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M') }}"
+    report_file: "/home/service-satellite/ansible/reports/reboot_report_{{ timestamp }}.txt"
+  
+  tasks:
+      - name: Initialize report file (first host only)
+        delegate_to: localhost
+        run_once: true
+        check_mode: no
+        copy:
+          content: |
+            Post-Patching Reboot Report
+            Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+            =====================================
+            
+          dest: "{{ report_file }}"
+      
+      - name: Check if reboot is required
+        command: needs-restarting -r
+        register: reboot_check
+        failed_when: reboot_check.rc > 1
+        changed_when: false
+        check_mode: no
+
+      - name: Log needs-restarting result
+        delegate_to: localhost
+        check_mode: no
+        lineinfile:
+          path: "{{ report_file }}"
+          line: "{{ inventory_hostname }}: needs-restarting exit code = {{ reboot_check.rc }}"
+          
+      - name: Handle servers needing reboot
+        block:
+          - name: Get uptime before reboot
+            command: uptime
+            register: uptime_before
+            check_mode: no
+
+          - name: Reboot the server
+            reboot:
+              reboot_timeout: "{{ reboot_timeout }}"
+              msg: "Post-patching reboot initiated by Ansible"
+              
+          - name: Get uptime after reboot
+            command: uptime
+            register: uptime_after
+            
+          - name: Log successful reboot
+            delegate_to: localhost
+            check_mode: no
+            lineinfile:
+              path: "{{ report_file }}"
+              line: |
+                {{ inventory_hostname }}: REBOOTED
+                  Before: {{ uptime_before.stdout }}
+                  After:  {{ uptime_after.stdout }}
+                
+        when: reboot_check.rc == 1
+        
+      - name: Log skipped servers
+        delegate_to: localhost
+        lineinfile:
+          path: "{{ report_file }}"
+          line: "{{ inventory_hostname }}: SKIPPED - No reboot required (exit code 0)"
+        when: reboot_check.rc == 0
+        
+      - name: Display final report (last host only)
+        delegate_to: localhost
+        command: cat {{ report_file }}
+        register: final_report
+        run_once: true
+        when: inventory_hostname == ansible_play_hosts[-1]
+        
+      - name: Show report
+        debug:
+          msg: "{{ final_report.stdout_lines }}"
+        run_once: true
+        when: inventory_hostname == ansible_play_hosts[-1]

@@ -1,0 +1,90 @@
+--- 
+- name: Configure firewalld
+  hosts: git.northshore.local
+  become: true
+  tasks:
+    - name: Ensure firewalld service is running and enabled
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Allow ICMP from all
+      ansible.posix.firewalld:
+        protocol: icmp
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: SSH from Danvers IS
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.11.0/24" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: SSH from VPN
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.7.0/24" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: SSH from Arkanis
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.9.95/32" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+    
+    - name: SSH from Satellite
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.15.46/32" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+    
+    - name: SSH from Fred Jumpbox
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.9.236/32" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: SSH from Barghest
+      ansible.posix.firewalld:
+        rich_rule: 'rule family="ipv4" source address="10.1.15.50/32" service name="ssh" accept'
+        zone: public
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: Remove SSH as a service
+      ansible.posix.firewalld:
+        service: ssh
+        zone: public
+        state: disabled
+        permanent: true
+        immediate: true
+
+    - name: Reload firewalld
+      ansible.builtin.command:
+        cmd: firewall-cmd --reload
+      changed_when: false
+
+    - name: List all firewall rules
+      ansible.builtin.command:
+        cmd: firewall-cmd --list-all
+      register: firewall_rules
+      changed_when: false
+
+    - name: Display firewall rules
+      ansible.builtin.debug:
+        var: firewall_rules.stdout_lines
+
