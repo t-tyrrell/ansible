@@ -1,0 +1,22 @@
+---
+# Bootstrap Vault Configuration - SENSITIVE PASSWORDS
+# This is a TEMPLATE file. Copy this to bootstrap_vault.yml and fill in your passwords
+# Then encrypt with: ansible-vault encrypt group_vars/bootstrap_vault.yml
+
+# ============================================
+# Active Directory Join Password
+# ============================================
+# Password for the AD user account used to join systems to the domain
+ad_join_password: "CHANGE_ME_AD_PASSWORD"
+
+# ============================================
+# Red Hat Satellite Password (OPTIONAL - Not needed with activation keys)
+# ============================================
+# Only needed if using bootstrap script method instead of activation keys
+# satellite_admin_password: "CHANGE_ME_SATELLITE_PASSWORD"
+
+# ============================================
+# CrowdStrike Configuration (OPTIONAL)
+# ============================================
+# CrowdStrike Customer ID
+# vault_crowdstrike_cid: "CHANGE_ME_CROWDSTRIKE_CID"
