@@ -1,0 +1,51 @@
+---
+- name: Remove authorized SSH key from servers
+  hosts: all
+  become: yes
+  
+  vars:
+    # Define the key to remove (can be full key or comment/identifier)
+    key_to_remove: "ttadm@barghest"  # Comment or unique string from the key
+    # OR specify full key:
+    # key_to_remove: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAB..."
+    
+    # User whose authorized_keys to modify
+    target_user: "ttadm@northshore.local"
+  
+  tasks:
+    - name: Display what we're doing
+      ansible.builtin.debug:
+        msg: "Removing SSH key containing '{{ key_to_remove }}' from {{ target_user }}'s authorized_keys"
+
+    - name: Check if authorized_keys file exists
+      ansible.builtin.stat:
+        path: "/home/{{ target_user }}/.ssh/authorized_keys"
+      register: auth_keys_file
+
+    - name: Display warning if file doesn't exist
+      ansible.builtin.debug:
+        msg: "authorized_keys file not found for {{ target_user }} on {{ inventory_hostname }}"
+      when: not auth_keys_file.stat.exists
+
+    - name: Remove SSH key by comment/identifier
+      ansible.builtin.lineinfile:
+        path: "/home/{{ target_user }}/.ssh/authorized_keys"
+        state: absent
+        regexp: ".*{{ key_to_remove }}.*"
+      when: auth_keys_file.stat.exists
+      register: key_removal
+
+    - name: Display removal status
+      ansible.builtin.debug:
+        msg: "{{ 'Key removed from' if key_removal.changed else 'Key not found on' }} {{ inventory_hostname }}"
+      when: auth_keys_file.stat.exists
+
+    - name: Summary report
+      ansible.builtin.debug:
+        msg:
+          - "=========================================="
+          - "Host: {{ inventory_hostname }}"
+          - "User: {{ target_user }}"
+          - "Key removed: {{ key_removal.changed | default(false) }}"
+          - "=========================================="
+      when: auth_keys_file.stat.exists

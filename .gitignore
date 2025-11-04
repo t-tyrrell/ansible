@@ -1,0 +1,17 @@
+# Ansible temporary files
+*.retry
+*.log
+
+# SSH and credentials
+*.pem
+*.key
+.vault_pass
+*.secret
+.vault_pass.txt
+
+# OS and IDE clutter
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+__pycache__/
