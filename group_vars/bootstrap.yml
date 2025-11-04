@@ -47,13 +47,13 @@ satellite_location: "Default Location"
 # CrowdStrike Configuration
 # ============================================
 # CrowdStrike sensor package URL (update with your download location)
-# crowdstrike_sensor_url: "http://satellite.northshore.local/pub/crowdstrike/falcon-sensor-latest.rpm"
+crowdstrike_sensor_url: "http://deathstar.northshore.local/pub/Crowdstrike/falcon-sensor-7.30.0-18306.el9.x86_64.rpm"
 
 # CrowdStrike sensor package filename
-# crowdstrike_sensor_package: "falcon-sensor-latest.rpm"
+crowdstrike_sensor_package: "falcon-sensor-7.30.0-18306.el9.x86_64.rpm"
 
 # CrowdStrike Customer ID (stored in vault)
-# crowdstrike_cid: "{{ vault_crowdstrike_cid }}"
+crowdstrike_cid: "{{ vault_crowdstrike_cid }}"
 
 # Disable GPG check for CrowdStrike package (if needed)
 crowdstrike_disable_gpg_check: false
@@ -79,5 +79,12 @@ firewall_disable_default_ssh: true
 #   - { service: "https", zone: "public", state: "enabled" }
 
 # Additional firewall ports (optional)
-# firewall_additional_ports:
+firewall_additional_ports:
 #   - { port: "8080", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "4001", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8013", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8015", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8871", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "443", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "10443", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "9443", protocol: "tcp", zone: "public", state: "enabled" }  
