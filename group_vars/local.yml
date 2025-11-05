@@ -1,5 +1,0 @@
----
-# Localhost specific variables - override domain appending
-
-ansible_connection: local
-ansible_host: localhost
