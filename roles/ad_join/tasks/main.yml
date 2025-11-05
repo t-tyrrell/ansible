@@ -25,7 +25,7 @@
 
 - name: Join system to Active Directory
   ansible.builtin.expect:
-    command: "realm join --user={{ ad_join_user }} {{ ad_domain }} --computer-ou='{{ ad_computer_ou }}'"
+    command: "realm join NORTHSHORE.LOCAL --user=ttadm@NORTHSHORE.LOCAL
     responses:
       (?i)password: "{{ ad_join_password }}"
   when:

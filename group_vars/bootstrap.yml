@@ -12,13 +12,10 @@
 # Active Directory Configuration
 # ============================================
 # AD domain to join
-ad_domain: "northshore.local"
+ad_domain: "NORTHSHORE.LOCAL"
 
 # AD user for joining domain (password stored in bootstrap_vault.yml)
 ad_join_user: "ttadm"
-
-# OU where computer account will be created
-ad_computer_ou: "OU=Servers,DC=northshore,DC=local"
 
 # AD groups that are permitted to login (deny all others)
 ad_permitted_groups:
