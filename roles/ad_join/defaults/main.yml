@@ -1,0 +1,4 @@
+---
+# defaults file for ad_join role
+ad_domain: "northshore.local"
+ad_computer_ou: "OU=Servers,DC=northshore,DC=local"

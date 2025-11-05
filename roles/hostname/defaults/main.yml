@@ -1,0 +1,3 @@
+---
+# defaults file for hostname role
+domain_name: "northshore.local"

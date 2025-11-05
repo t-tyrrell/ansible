@@ -1,0 +1,3 @@
+---
+# defaults file for crowdstrike role
+crowdstrike_disable_gpg_check: false

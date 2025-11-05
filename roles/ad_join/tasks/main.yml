@@ -1,0 +1,88 @@
+---
+# tasks file for ad_join role
+- name: Install required packages for AD join
+  ansible.builtin.dnf:
+    name:
+      - realmd
+      - sssd
+      - oddjob
+      - oddjob-mkhomedir
+      - adcli
+      - samba-common
+      - samba-common-tools
+      - krb5-workstation
+      - python3-pexpect
+    state: present
+  tags: ad_join
+
+- name: Check if system is already joined to AD
+  ansible.builtin.command:
+    cmd: realm list
+  register: realm_list
+  changed_when: false
+  failed_when: false
+  tags: ad_join
+
+- name: Join system to Active Directory
+  ansible.builtin.expect:
+    command: "realm join --user={{ ad_join_user }} {{ ad_domain }} --computer-ou='{{ ad_computer_ou }}'"
+    responses:
+      (?i)password: "{{ ad_join_password }}"
+  when:
+    - realm_list.stdout == ""
+    - ad_join_user is defined
+    - ad_join_password is defined
+  no_log: true
+  tags: ad_join
+
+- name: Configure SSSD to use simple access provider
+  ansible.builtin.lineinfile:
+    path: /etc/sssd/sssd.conf
+    regexp: '^access_provider'
+    line: 'access_provider = simple'
+    state: present
+  notify: restart sssd
+  tags: ad_access
+
+- name: Deny all users by default
+  ansible.builtin.command:
+    cmd: realm deny --all
+  changed_when: false
+  tags: ad_access
+
+- name: Permit specific AD groups
+  ansible.builtin.command:
+    cmd: "realm permit -g '{{ item }}'"
+  loop: "{{ ad_permitted_groups }}"
+  when: ad_permitted_groups is defined
+  changed_when: false
+  tags: ad_access
+
+- name: Configure automatic home directory creation
+  ansible.builtin.lineinfile:
+    path: /etc/sssd/sssd.conf
+    regexp: '^{{ item.key }}'
+    line: '{{ item.key }} = {{ item.value }}'
+    state: present
+  loop:
+    - { key: 'fallback_homedir', value: '/home/%u' }
+    - { key: 'default_shell', value: '/bin/bash' }
+  notify: restart sssd
+  tags: ad_access
+
+- name: Enable oddjobd service for home directory creation
+  ansible.builtin.service:
+    name: oddjobd
+    state: started
+    enabled: true
+  tags: ad_access
+
+- name: Create sudoers drop-in file for g_linux group
+  ansible.builtin.copy:
+    content: "g_linux@northshore.local ALL=(ALL) NOPASSWD:ALL\n"
+    dest: /etc/sudoers.d/g_linux
+    owner: root
+    group: root
+    mode: '0440'
+    validate: /usr/sbin/visudo -cf %s
+  tags: sudoers

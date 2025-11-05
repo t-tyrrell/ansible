@@ -1,0 +1,78 @@
+---
+# tasks file for firewall role
+- name: Ensure firewalld service is running and enabled
+  ansible.builtin.service:
+    name: firewalld
+    state: started
+    enabled: true
+  tags: firewall
+
+- name: Allow ICMP from all
+  ansible.posix.firewalld:
+    protocol: icmp
+    zone: public
+    state: enabled
+    permanent: true
+    immediate: true
+  tags: firewall
+
+- name: Configure SSH rich rules for authorized networks
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ item.source }}" service name="ssh" accept'
+    zone: public
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewall_ssh_allowed_sources }}"
+  when: firewall_ssh_allowed_sources is defined
+  tags: firewall
+
+- name: Remove SSH as a service from public zone
+  ansible.posix.firewalld:
+    service: ssh
+    zone: public
+    state: disabled
+    permanent: true
+    immediate: true
+  when: firewall_disable_default_ssh | default(true)
+  tags: firewall
+
+- name: Configure additional firewall services
+  ansible.posix.firewalld:
+    service: "{{ item.service }}"
+    zone: "{{ item.zone | default('public') }}"
+    state: "{{ item.state | default('enabled') }}"
+    permanent: true
+    immediate: true
+  loop: "{{ firewall_additional_services }}"
+  when: firewall_additional_services is defined
+  tags: firewall
+
+- name: Configure additional firewall ports
+  ansible.posix.firewalld:
+    port: "{{ item.port }}/{{ item.protocol | default('tcp') }}"
+    zone: "{{ item.zone | default('public') }}"
+    state: "{{ item.state | default('enabled') }}"
+    permanent: true
+    immediate: true
+  loop: "{{ firewall_additional_ports }}"
+  when: firewall_additional_ports is defined
+  tags: firewall
+
+- name: Reload firewalld
+  ansible.builtin.command:
+    cmd: firewall-cmd --reload
+  changed_when: false
+  tags: firewall
+
+- name: List all firewall rules
+  ansible.builtin.command:
+    cmd: firewall-cmd --list-all
+  register: firewall_rules
+  changed_when: false
+  tags: firewall
+
+- name: Display firewall rules
+  ansible.builtin.debug:
+    var: firewall_rules.stdout_lines
+  tags: firewall

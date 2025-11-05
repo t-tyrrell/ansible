@@ -1,0 +1,21 @@
+---
+# tasks file for system_updates role
+- name: Update all packages
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    update_cache: true
+  register: system_update
+  tags: updates
+
+- name: Check if reboot is required
+  ansible.builtin.stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+  tags: updates
+
+- name: Display update results
+  ansible.builtin.debug:
+    msg: "System updated. Reboot may be required for kernel updates."
+  when: system_update.changed
+  tags: updates

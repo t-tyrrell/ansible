@@ -1,0 +1,11 @@
+---
+# tasks file for ssh_hardening role
+- name: Disable root SSH login
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+    validate: /usr/sbin/sshd -t -f %s
+  notify: restart sshd
+  tags: ssh
