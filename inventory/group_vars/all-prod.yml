@@ -1,0 +1,12 @@
+---
+# Production environment specific variables
+
+environment: production
+backup_enabled: true
+monitoring_enabled: true
+
+# Maintenance windows (for scheduled tasks)
+maintenance_window_start: "02:00"
+maintenance_window_end: "04:00"
+
+

@@ -1,0 +1,87 @@
+---
+# Bootstrap Configuration Variables
+# This file contains non-sensitive configuration options for the bootstrap playbook
+
+# ============================================
+# Hostname Configuration
+# ============================================
+# Set this to the desired hostname for the server
+# bootstrap_hostname: "newserver"
+
+# ============================================
+# Active Directory Configuration
+# ============================================
+# AD domain to join
+ad_domain: "NORTHSHORE.LOCAL"
+
+# AD user for joining domain (password stored in bootstrap_vault.yml)
+ad_join_user: "ttadm"
+
+# AD groups that are permitted to login (deny all others)
+ad_permitted_groups:
+  - "g_linux"
+  # Add additional groups as needed
+
+# ============================================
+# Red Hat Satellite Configuration
+# ============================================
+# Satellite server hostname
+satellite_hostname: "deathstar.northshore.local"
+
+# Satellite server URL
+satellite_url: "https://{{ satellite_hostname }}"
+
+# Satellite organization
+satellite_organization: "Northshore"
+
+# Satellite location
+satellite_location: "Default Location"
+
+# Note: Activation key is selected at runtime via prompt
+# Available keys: rhel8-nonprod, rhel8-prod, rhel9-nonprod
+
+# ============================================
+# CrowdStrike Configuration
+# ============================================
+# CrowdStrike sensor package URL (update with your download location)
+crowdstrike_sensor_url: "http://deathstar.northshore.local/pub/Crowdstrike/falcon-sensor-7.30.0-18306.el9.x86_64.rpm"
+
+# CrowdStrike sensor package filename
+crowdstrike_sensor_package: "falcon-sensor-7.30.0-18306.el9.x86_64.rpm"
+
+# CrowdStrike Customer ID (stored in vault)
+crowdstrike_cid: "{{ vault_crowdstrike_cid }}"
+
+# Disable GPG check for CrowdStrike package (if needed)
+crowdstrike_disable_gpg_check: false
+
+# ============================================
+# Firewall Configuration
+# ============================================
+# SSH allowed source networks (using existing network definitions)
+firewall_ssh_allowed_sources:
+  - { source: "10.1.11.0/24", comment: "Danvers IS" }
+  - { source: "10.7.1.0/24", comment: "VPN" }
+  - { source: "10.1.9.95/32", comment: "Arkanis" }
+  - { source: "10.1.15.46/32", comment: "Satellite" }
+  - { source: "10.1.9.236/32", comment: "Fred Jumpbox" }
+  - { source: "10.1.15.50/32", comment: "Barghest" }
+
+# Disable SSH service from public zone (use rich rules only)
+firewall_disable_default_ssh: true
+
+# Additional firewall services (optional)
+# firewall_additional_services:
+#   - { service: "http", zone: "public", state: "enabled" }
+#   - { service: "https", zone: "public", state: "enabled" }
+
+# Additional firewall ports (optional)
+firewall_additional_ports:
+#   - { port: "8080", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "4001", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8013", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8015", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "8871", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "443", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "10443", protocol: "tcp", zone: "public", state: "enabled" }
+  - { port: "9443", protocol: "tcp", zone: "public", state: "enabled" }  

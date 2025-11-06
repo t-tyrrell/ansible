@@ -1,0 +1,130 @@
+#===============================
+# LOCAL HOST
+#================================
+[local]
+localhost ansible_connection=local ansible_host=localhost
+
+# ============================================
+# PRODUCTION ENVIRONMENT
+# ============================================
+
+## PROD DATABASES ##
+[db-prod]
+nscc-pbnrd-001
+nscc-podsd-001
+
+[pbnrd]
+nscc-pbnrd-001
+
+[podsd]
+nscc-podsd-001
+
+## JOBSUBPROD ##
+[jobsubprod]
+jobsubprod
+
+## PROD BANNER APPS (NO DB) ##  
+[banner-prod]
+bepprod
+esm
+nscc-pssba-001
+nscc-pxeaa-001
+nscc-pxeaa-002
+nscc-pxesa-001
+nscc-pxesa-002
+nscc-pxesa-003
+nscc-pxesa-004
+nscc-pxesa-005
+nscc-pxesa-006
+nscc-pxesa-007
+workflowprod
+
+## PROD NON-BANNER ##
+[other-prod]
+appsprod
+infaprod
+lexis
+mysql3
+parchment
+requestnew
+smtp
+
+# ============================================
+# NON-PRODUCTION ENVIRONMENT
+# ============================================
+
+## NON-PROD DATABASES ##
+[db-dev]
+nscc-dbnrd-001
+nscc-dodsd-001
+
+[dbnrd]
+nscc-dbnrd-001
+
+[dodsd]
+nscc-dodsd-001
+
+## JOBSUBDEV ##
+[jobsubdev]
+jobsubdev
+
+## NON-PROD BANNER SERVERS ##
+[banner-dev] 
+bepdvmt
+nscc-dssba-001
+nscc-dxeaa-001
+nscc-dxeaa-002
+nscc-dxesa-001
+nscc-dxesa-002
+nscc-dxesa-003
+nscc-dxesa-004
+workflowtest
+
+## NON-PROD NON-BANNER SERVERS ##
+[other-dev]
+appsdev
+cass-redhat
+git
+infadev
+mysql1test
+webtest
+kashyyyk
+holocron
+yavin 
+
+# ============================================
+# LOGICAL GROUPINGS
+# ============================================
+
+## ALL BANNER EXCEPT DATABASES ##
+[all-apps-prod:children]
+banner-prod
+other-prod
+
+## ALL PRODUCTION ##
+[all-prod:children]
+db-prod
+banner-prod
+other-prod
+
+## ALL NON BANNER EXCEPT DATABASES ##
+[all-apps-dev:children]
+banner-dev
+other-dev
+
+## ALL NON-PROD ##
+[all-dev:children]
+db-dev
+banner-dev
+other-dev
+jobsubdev
+
+# ============================================
+# LOG AGGREGATION
+# ============================================
+[log-server]
+holocron
+
+[log-clients:children]
+all-prod
+all-dev
