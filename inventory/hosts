@@ -8,7 +8,11 @@ localhost ansible_connection=local ansible_host=localhost
 # PRODUCTION ENVIRONMENT
 # ============================================
 
-## PROD DATABASES ##
+#===SATELLITE===#
+[satellite]
+deathstar
+
+##===PROD DATABASES===##
 [db-prod]
 nscc-pbnrd-001
 nscc-podsd-001
@@ -23,7 +27,7 @@ nscc-podsd-001
 [jobsubprod]
 jobsubprod
 
-## PROD BANNER APPS (NO DB) ##  
+##===PROD BANNER APPS (NO DB)===##  
 [banner-prod]
 bepprod
 esm
@@ -39,7 +43,7 @@ nscc-pxesa-006
 nscc-pxesa-007
 workflowprod
 
-## PROD NON-BANNER ##
+##===PROD NON-BANNER===##
 [other-prod]
 appsprod
 infaprod
@@ -53,7 +57,7 @@ smtp
 # NON-PRODUCTION ENVIRONMENT
 # ============================================
 
-## NON-PROD DATABASES ##
+##===NON-PROD DATABASES===##
 [db-dev]
 nscc-dbnrd-001
 nscc-dodsd-001
@@ -64,11 +68,11 @@ nscc-dbnrd-001
 [dodsd]
 nscc-dodsd-001
 
-## JOBSUBDEV ##
+##===JOBSUBDEV===##
 [jobsubdev]
 jobsubdev
 
-## NON-PROD BANNER SERVERS ##
+##===NON-PROD BANNER SERVERS===##
 [banner-dev] 
 bepdvmt
 nscc-dssba-001
@@ -80,7 +84,7 @@ nscc-dxesa-003
 nscc-dxesa-004
 workflowtest
 
-## NON-PROD NON-BANNER SERVERS ##
+##===NON-PROD NON-BANNER SERVERS===##
 [other-dev]
 appsdev
 cass-redhat
@@ -96,35 +100,26 @@ yavin
 # LOGICAL GROUPINGS
 # ============================================
 
-## ALL BANNER EXCEPT DATABASES ##
+##===ALL BANNER EXCEPT DATABASES===##
 [all-apps-prod:children]
 banner-prod
 other-prod
 
-## ALL PRODUCTION ##
+##===ALL PRODUCTION===##
 [all-prod:children]
 db-prod
 banner-prod
 other-prod
 
-## ALL NON BANNER EXCEPT DATABASES ##
+##===ALL NON BANNER EXCEPT DATABASES===##
 [all-apps-dev:children]
 banner-dev
 other-dev
 
-## ALL NON-PROD ##
+##===ALL NON-PROD===##
 [all-dev:children]
 db-dev
 banner-dev
 other-dev
 jobsubdev
 
-# ============================================
-# LOG AGGREGATION
-# ============================================
-[log-server]
-holocron
-
-[log-clients:children]
-all-prod
-all-dev
