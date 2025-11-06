@@ -6,9 +6,11 @@
 *.pem
 *.key
 .vault_pass
+.vault_files
 *.secret
 .vault_pass.txt
 .ssh/
+
 # OS and IDE clutter
 .DS_Store
 Thumbs.db
