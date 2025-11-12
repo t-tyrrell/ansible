@@ -1,6 +1,0 @@
----
-# handlers file for ssh_hardening role
-- name: restart sshd
-  ansible.builtin.service:
-    name: sshd
-    state: restarted

@@ -1,6 +1,0 @@
----
-# handlers file for ad_join role
-- name: restart sssd
-  ansible.builtin.service:
-    name: sssd
-    state: restarted
