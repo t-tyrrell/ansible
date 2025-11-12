@@ -9,10 +9,17 @@ satellite_organization: "Default_Organization"
 
 # Activation keys based on OS version and environment
 # Environment is detected from group membership (all-prod vs all-dev)
+# You can use either the key name OR the numeric ID from Satellite
 satellite_activation_key_rhel8_prod: "rhel8-prod"
 satellite_activation_key_rhel8_nonprod: "rhel8-nonprod"
 satellite_activation_key_rhel9_prod: "rhel9-prod"
 satellite_activation_key_rhel9_nonprod: "rhel9-nonprod"
+
+# If using activation key IDs instead of names, uncomment and set these:
+# satellite_activation_key_rhel8_prod: "1"
+# satellite_activation_key_rhel8_nonprod: "2"
+# satellite_activation_key_rhel9_prod: "3"
+# satellite_activation_key_rhel9_nonprod: "4"
 
 # Skip registration if already registered
 satellite_skip_if_registered: true
