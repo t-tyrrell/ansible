@@ -1,0 +1,11 @@
+---
+# ============================================
+# SUDO ROLE - DEFAULT VARIABLES
+# ============================================
+
+# AD group for sudo access
+sudo_admin_group: "g_linux"
+
+# Sudo configuration
+sudo_passwordless: true
+sudo_commands: "ALL"

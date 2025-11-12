@@ -1,0 +1,10 @@
+---
+# ============================================
+# SELINUX ROLE - DEFAULT VARIABLES
+# ============================================
+
+# SELinux state: enforcing, permissive, disabled
+selinux_state: enforcing
+
+# SELinux policy type: targeted, mls
+selinux_policy: targeted

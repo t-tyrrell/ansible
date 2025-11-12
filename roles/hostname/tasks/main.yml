@@ -1,0 +1,44 @@
+---
+# ============================================
+# HOSTNAME ROLE - TASKS
+# ============================================
+# Purpose: Set hostname and FQDN from inventory
+# ============================================
+
+- name: Get current hostname
+  command: hostname
+  register: current_hostname
+  changed_when: false
+
+- name: Display current hostname
+  debug:
+    msg: "Current hostname: {{ current_hostname.stdout }}"
+
+- name: Set short hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+  register: hostname_set
+
+- name: Set FQDN hostname
+  hostname:
+    name: "{{ inventory_hostname }}.{{ bootstrap_domain }}"
+  when: bootstrap_set_fqdn | bool
+  register: fqdn_set
+
+- name: Verify hostname was set correctly
+  command: hostname
+  register: new_hostname
+  changed_when: false
+
+- name: Verify FQDN
+  command: hostname -f
+  register: new_fqdn
+  changed_when: false
+  when: bootstrap_set_fqdn | bool
+
+- name: Display new hostname
+  debug:
+    msg:
+      - "Hostname successfully set"
+      - "Short hostname: {{ new_hostname.stdout }}"
+      - "FQDN: {{ new_fqdn.stdout | default('N/A') }}"

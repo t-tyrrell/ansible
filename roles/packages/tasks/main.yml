@@ -1,0 +1,35 @@
+---
+# ============================================
+# PACKAGES ROLE - TASKS
+# ============================================
+# Purpose: Update packages and install base tools
+# ============================================
+
+- name: Update all packages to latest version
+  yum:
+    name: '*'
+    state: latest
+    update_cache: yes
+  when: packages_update_all | bool
+  register: package_updates
+
+- name: Display package update results
+  debug:
+    msg: "{{ 'Packages updated successfully' if package_updates.changed else 'All packages already up to date' }}"
+
+- name: Install base packages
+  yum:
+    name: "{{ packages_base_packages }}"
+    state: present
+  register: base_packages_result
+
+- name: Verify base packages are installed
+  command: "rpm -q {{ item }}"
+  loop: "{{ packages_base_packages }}"
+  register: package_verify
+  changed_when: false
+  failed_when: false
+
+- name: Display installed packages
+  debug:
+    msg: "✓ Base packages installed: {{ packages_base_packages | join(', ') }}"

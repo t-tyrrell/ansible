@@ -1,0 +1,10 @@
+---
+# ============================================
+# HOSTNAME ROLE - DEFAULT VARIABLES
+# ============================================
+
+# Domain name
+bootstrap_domain: "{{ domain_name | default('northshore.local') }}"
+
+# Whether to set FQDN
+bootstrap_set_fqdn: true

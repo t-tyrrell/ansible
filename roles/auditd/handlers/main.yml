@@ -1,0 +1,9 @@
+---
+# ============================================
+# AUDITD ROLE - HANDLERS
+# ============================================
+
+- name: Restart auditd
+  service:
+    name: auditd
+    state: restarted

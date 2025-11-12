@@ -1,0 +1,56 @@
+---
+# ============================================
+# REBOOT ROLE - TASKS
+# ============================================
+# Purpose: Conditionally reboot server after bootstrap
+# ============================================
+
+- name: Check if reboot is required
+  command: needs-restarting -r
+  register: reboot_check
+  failed_when: reboot_check.rc > 1
+  changed_when: false
+
+- name: Display reboot requirement status
+  debug:
+    msg: "{{ 'Reboot is required (exit code: ' + reboot_check.rc|string + ')' if reboot_check.rc == 1 else 'No reboot required' }}"
+
+- name: Handle servers needing reboot
+  when: reboot_check.rc == 1 or not reboot_only_if_needed
+  block:
+    - name: Get uptime before reboot
+      command: uptime
+      register: uptime_before
+      changed_when: false
+
+    - name: Display pre-reboot uptime
+      debug:
+        msg: "Current uptime: {{ uptime_before.stdout }}"
+
+    - name: Reboot the server
+      reboot:
+        reboot_timeout: "{{ reboot_timeout }}"
+        msg: "Bootstrap reboot initiated by Ansible"
+      register: reboot_result
+
+    - name: Wait for system to come back online
+      wait_for_connection:
+        timeout: "{{ reboot_timeout }}"
+        delay: 10
+
+    - name: Get uptime after reboot
+      command: uptime
+      register: uptime_after
+      changed_when: false
+
+    - name: Display post-reboot uptime
+      debug:
+        msg:
+          - "✓ Server rebooted successfully"
+          - "Before: {{ uptime_before.stdout }}"
+          - "After:  {{ uptime_after.stdout }}"
+
+- name: Display skip message
+  debug:
+    msg: "⊘ Reboot skipped - System does not require restart"
+  when: reboot_check.rc == 0 and reboot_only_if_needed

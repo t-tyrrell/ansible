@@ -1,0 +1,53 @@
+---
+# ============================================
+# SSH-HARDENING ROLE - TASKS
+# ============================================
+# Purpose: Harden SSH configuration
+# ============================================
+
+- name: Backup current sshd_config
+  copy:
+    src: /etc/ssh/sshd_config
+    dest: "/etc/ssh/sshd_config.backup.{{ ansible_date_time.iso8601_basic_short }}"
+    remote_src: yes
+    mode: '0600'
+  when: ssh_backup_config | bool
+
+- name: Get current PermitRootLogin setting
+  shell: grep -E "^PermitRootLogin" /etc/ssh/sshd_config || echo "Not explicitly set"
+  register: current_root_setting
+  changed_when: false
+
+- name: Display current setting
+  debug:
+    msg: "Current PermitRootLogin: {{ current_root_setting.stdout }}"
+
+- name: Disable root login via SSH
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin no'
+    state: present
+    backup: yes
+  when: ssh_disable_root_login | bool
+  notify: Restart sshd
+
+- name: Validate sshd_config syntax
+  command: sshd -t
+  register: sshd_test
+  changed_when: false
+  failed_when: sshd_test.rc != 0
+
+- name: Display validation result
+  debug:
+    msg: "✓ SSH configuration is valid"
+  when: sshd_test.rc == 0
+
+- name: Get new PermitRootLogin setting
+  shell: grep -E "^PermitRootLogin" /etc/ssh/sshd_config
+  register: new_root_setting
+  changed_when: false
+
+- name: Display new setting
+  debug:
+    msg: "✓ Root SSH login disabled: {{ new_root_setting.stdout }}"

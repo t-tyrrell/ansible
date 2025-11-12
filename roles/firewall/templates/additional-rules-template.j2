@@ -1,0 +1,112 @@
+# ============================================
+# ADDITIONAL FIREWALL RULES TEMPLATE
+# ============================================
+# This template provides examples for adding additional firewall rules
+# for specific server types. Uncomment and modify as needed.
+# ============================================
+
+# ===== WEB SERVERS =====
+# Allow HTTP traffic
+# - name: Allow HTTP
+#   ansible.posix.firewalld:
+#     service: http
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# Allow HTTPS traffic
+# - name: Allow HTTPS
+#   ansible.posix.firewalld:
+#     service: https
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== DATABASE SERVERS =====
+# Allow MySQL/MariaDB
+# - name: Allow MySQL
+#   ansible.posix.firewalld:
+#     port: 3306/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# Allow PostgreSQL
+# - name: Allow PostgreSQL
+#   ansible.posix.firewalld:
+#     port: 5432/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# Allow Oracle
+# - name: Allow Oracle
+#   ansible.posix.firewalld:
+#     port: 1521/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== APPLICATION SERVERS =====
+# Allow custom application port
+# - name: Allow custom application port
+#   ansible.posix.firewalld:
+#     port: 8080/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== RICH RULES FOR SPECIFIC SOURCES =====
+# Allow HTTP from specific subnet
+# - name: Allow HTTP from internal network
+#   ansible.posix.firewalld:
+#     rich_rule: 'rule family="ipv4" source address="10.1.0.0/16" service name="http" accept'
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== NFS SERVERS =====
+# Allow NFS
+# - name: Allow NFS
+#   ansible.posix.firewalld:
+#     service: nfs
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== DNS SERVERS =====
+# Allow DNS
+# - name: Allow DNS
+#   ansible.posix.firewalld:
+#     service: dns
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# ===== MONITORING =====
+# Allow Prometheus Node Exporter
+# - name: Allow Node Exporter
+#   ansible.posix.firewalld:
+#     port: 9100/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true
+
+# Allow Zabbix Agent
+# - name: Allow Zabbix Agent
+#   ansible.posix.firewalld:
+#     port: 10050/tcp
+#     zone: "{{ firewall_zone }}"
+#     state: enabled
+#     permanent: true
+#     immediate: true

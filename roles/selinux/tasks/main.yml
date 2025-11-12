@@ -1,0 +1,48 @@
+---
+# ============================================
+# SELINUX ROLE - TASKS
+# ============================================
+# Purpose: Configure SELinux to enforcing mode
+# ============================================
+
+- name: Check current SELinux status
+  command: getenforce
+  register: current_selinux
+  changed_when: false
+
+- name: Display current SELinux status
+  debug:
+    msg: "Current SELinux status: {{ current_selinux.stdout }}"
+
+- name: Ensure libselinux-python is installed (RHEL 7/8)
+  yum:
+    name: libselinux-python
+    state: present
+  when: ansible_distribution_major_version | int < 9
+  failed_when: false
+
+- name: Ensure python3-libselinux is installed (RHEL 9+)
+  yum:
+    name: python3-libselinux
+    state: present
+  when: ansible_distribution_major_version | int >= 9
+
+- name: Set SELinux to enforcing mode
+  selinux:
+    policy: "{{ selinux_policy }}"
+    state: "{{ selinux_state }}"
+  register: selinux_result
+
+- name: Check if reboot is required for SELinux
+  debug:
+    msg: "⚠ SELinux mode changed - reboot will be required"
+  when: selinux_result.reboot_required | default(false)
+
+- name: Verify SELinux configuration
+  command: getenforce
+  register: verify_selinux
+  changed_when: false
+
+- name: Display SELinux status
+  debug:
+    msg: "✓ SELinux is set to: {{ verify_selinux.stdout }}"

@@ -1,0 +1,23 @@
+---
+# ============================================
+# DOMAIN-JOIN ROLE - DEFAULT VARIABLES
+# ============================================
+
+# AD domain configuration
+ad_domain: "{{ domain_name | default('northshore.local') }}"
+
+# AD join credentials (should be in Ansible Vault)
+# Example: vault_ad_join_username: "domain_admin"
+# Example: vault_ad_join_password: "SecurePassword123"
+ad_join_username: "{{ vault_ad_join_username }}"
+ad_join_password: "{{ vault_ad_join_password }}"
+
+# Groups allowed to login
+ad_allowed_groups:
+  - g_linux
+
+# Create home directories on first login
+ad_create_homedir: true
+
+# Skip domain join if already joined
+ad_skip_if_joined: true
