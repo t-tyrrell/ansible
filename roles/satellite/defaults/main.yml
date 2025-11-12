@@ -8,11 +8,11 @@ satellite_server: "deathstar.{{ domain_name | default('northshore.local') }}"
 satellite_organization: "Default_Organization"
 
 # Activation keys based on OS version
-satellite_activation_key_rhel8: "RHEL8_CORE"
-satellite_activation_key_rhel9: "RHEL9_CORE"
+satellite_activation_key_rhel8: "rhel8-nonprod"
+satellite_activation_key_rhel9: "rhel9-nonprod"
 
 # Content view
-satellite_content_view: "Library"
+satellite_content_view: "Non-Production"
 
 # Skip registration if already registered
 satellite_skip_if_registered: true
