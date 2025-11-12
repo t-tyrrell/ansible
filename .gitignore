@@ -8,7 +8,7 @@
 .vault_pass
 *.secret
 .vault_pass.txt
-
+.ssh/
 # OS and IDE clutter
 .DS_Store
 Thumbs.db
