@@ -4,7 +4,7 @@
 # ============================================
 
 # AD domain configuration
-ad_domain: "{{ domain_name | default('northshore.local') }}"
+ad_domain: "{{ domain_name | default('NORTHSHORE.LOCAL') }}"
 
 # AD join credentials (should be in Ansible Vault)
 # Example: vault_ad_join_username: "domain_admin"
