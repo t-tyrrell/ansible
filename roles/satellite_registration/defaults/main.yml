@@ -1,4 +1,0 @@
----
-# defaults file for satellite_registration role
-satellite_hostname: "deathstar.northshore.local"
-satellite_organization: "Northshore"

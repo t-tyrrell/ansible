@@ -1,3 +1,0 @@
----
-# defaults file for firewall role
-firewall_disable_default_ssh: true
