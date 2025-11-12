@@ -23,9 +23,22 @@
       set_fact:
         os_major_version: "{{ ansible_distribution_major_version }}"
 
-    - name: Set activation key based on OS version
+    - name: Detect environment (prod vs non-prod)
       set_fact:
-        activation_key: "{{ satellite_activation_key_rhel9 if os_major_version == '9' else satellite_activation_key_rhel8 }}"
+        is_production: "{{ 'all-prod' in group_names }}"
+
+    - name: Set activation key based on OS version and environment
+      set_fact:
+        activation_key: >-
+          {% if os_major_version == '9' and is_production %}
+          {{ satellite_activation_key_rhel9_prod }}
+          {% elif os_major_version == '9' and not is_production %}
+          {{ satellite_activation_key_rhel9_nonprod }}
+          {% elif os_major_version == '8' and is_production %}
+          {{ satellite_activation_key_rhel8_prod }}
+          {% else %}
+          {{ satellite_activation_key_rhel8_nonprod }}
+          {% endif %}
 
     - name: Display registration details
       debug:
@@ -34,6 +47,16 @@
           - "Organization: {{ satellite_organization }}"
           - "Activation Key: {{ activation_key }}"
           - "OS Version: RHEL {{ os_major_version }}"
+          - "Environment: {{ 'Production' if is_production else 'Non-Production' }}"
+
+    - name: Unregister from any existing subscriptions
+      command: subscription-manager unregister
+      failed_when: false
+      changed_when: false
+
+    - name: Clean subscription-manager data
+      command: subscription-manager clean
+      changed_when: false
 
     - name: Remove old katello-ca-consumer package (if exists)
       yum:
@@ -47,13 +70,14 @@
         state: present
         disable_gpg_check: yes
 
-    - name: Register to Satellite with activation key
-      redhat_subscription:
-        state: present
-        activationkey: "{{ activation_key }}"
-        org_id: "{{ satellite_organization }}"
-        force_register: yes
+    - name: Register to Satellite with activation key using subscription-manager
+      shell: >
+        subscription-manager register
+        --org="{{ satellite_organization }}"
+        --activationkey="{{ activation_key }}"
+        --force
       register: registration_result
+      changed_when: "'The system has been registered' in registration_result.stdout"
 
     - name: Verify registration
       command: subscription-manager identity
@@ -64,6 +88,15 @@
       debug:
         msg: "✓ Successfully registered to Satellite: {{ satellite_server }}"
       when: verify_registration.rc == 0
+
+    - name: Display subscription status
+      command: subscription-manager status
+      register: subscription_status
+      changed_when: false
+
+    - name: Show subscription status
+      debug:
+        var: subscription_status.stdout_lines
 
   rescue:
     - name: Registration failed
