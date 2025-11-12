@@ -1,0 +1,35 @@
+---
+# ============================================
+# SUDO ROLE - TASKS
+# ============================================
+# Purpose: Configure sudo access for g_linux group
+# ============================================
+
+- name: Ensure sudo is installed
+  yum:
+    name: sudo
+    state: present
+
+- name: Create sudoers drop-in file for g_linux
+  template:
+    src: g_linux-sudoers.j2
+    dest: /etc/sudoers.d/90-g_linux
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+  register: sudoers_created
+
+- name: Display sudoers configuration status
+  debug:
+    msg: "{{ 'Sudoers file created' if sudoers_created.changed else 'Sudoers file already exists' }}"
+
+- name: Verify sudoers file exists
+  stat:
+    path: /etc/sudoers.d/90-g_linux
+  register: sudoers_file
+
+- name: Display success message
+  debug:
+    msg: "✓ Passwordless sudo configured for {{ sudo_admin_group }}"
+  when: sudoers_file.stat.exists

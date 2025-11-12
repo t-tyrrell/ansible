@@ -1,0 +1,49 @@
+---
+# ============================================
+# SSH-CONFIG ROLE - TASKS
+# ============================================
+# Purpose: Configure SSH access for service-satellite
+# ============================================
+
+- name: Ensure service-satellite user exists
+  user:
+    name: "{{ ssh_service_account }}"
+    state: present
+    shell: /bin/bash
+    create_home: yes
+  register: user_created
+
+- name: Display user creation status
+  debug:
+    msg: "{{ 'User created' if user_created.changed else 'User already exists' }}: {{ ssh_service_account }}"
+
+- name: Ensure .ssh directory exists
+  file:
+    path: "/home/{{ ssh_service_account }}/.ssh"
+    state: directory
+    owner: "{{ ssh_service_account }}"
+    group: "{{ ssh_service_account }}"
+    mode: '0700'
+
+- name: Add SSH public key to authorized_keys
+  authorized_key:
+    user: "{{ ssh_service_account }}"
+    key: "{{ ssh_service_satellite_pubkey }}"
+    state: present
+    exclusive: no
+  register: ssh_key_added
+
+- name: Display SSH key status
+  debug:
+    msg: "{{ 'SSH key added' if ssh_key_added.changed else 'SSH key already present' }} for {{ ssh_service_account }}"
+
+- name: Verify authorized_keys file permissions
+  file:
+    path: "/home/{{ ssh_service_account }}/.ssh/authorized_keys"
+    owner: "{{ ssh_service_account }}"
+    group: "{{ ssh_service_account }}"
+    mode: '0600'
+
+- name: Display success message
+  debug:
+    msg: "✓ SSH access configured for {{ ssh_service_account }}"

@@ -1,0 +1,13 @@
+---
+# ============================================
+# AUDITD ROLE - DEFAULT VARIABLES
+# ============================================
+
+# Enable auditd service
+auditd_enable: true
+
+# Audit rules configuration
+auditd_rules_file: "/etc/audit/rules.d/ansible-bootstrap.rules"
+
+# Buffer size
+auditd_buffer_size: 8192

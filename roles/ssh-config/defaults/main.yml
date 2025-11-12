@@ -1,0 +1,15 @@
+---
+# ============================================
+# SSH-CONFIG ROLE - DEFAULT VARIABLES
+# ============================================
+
+# Service account SSH configuration
+ssh_service_account: "service-satellite"
+
+# SSH public key for service-satellite
+# IMPORTANT: This should be defined in an Ansible Vault encrypted file
+# Example: vault_ssh_service_satellite_pubkey: "ssh-ed25519 AAAAC3... user@host"
+ssh_service_satellite_pubkey: "{{ vault_ssh_service_satellite_pubkey }}"
+
+# SSH key type and comment
+ssh_key_options: ""

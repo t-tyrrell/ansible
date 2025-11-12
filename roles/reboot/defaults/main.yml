@@ -1,0 +1,10 @@
+---
+# ============================================
+# REBOOT ROLE - DEFAULT VARIABLES
+# ============================================
+
+# Reboot timeout in seconds
+reboot_timeout: 600
+
+# Only reboot if system needs restarting
+reboot_only_if_needed: true

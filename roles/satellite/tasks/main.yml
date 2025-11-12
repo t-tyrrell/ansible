@@ -1,0 +1,71 @@
+---
+# ============================================
+# SATELLITE ROLE - TASKS
+# ============================================
+# Purpose: Register server to Red Hat Satellite
+# ============================================
+
+- name: Check if system is already registered to Satellite
+  command: subscription-manager identity
+  register: subscription_check
+  failed_when: false
+  changed_when: false
+
+- name: Display current registration status
+  debug:
+    msg: "System is already registered to Satellite"
+  when: subscription_check.rc == 0
+
+- name: Satellite registration block
+  when: subscription_check.rc != 0 or not satellite_skip_if_registered
+  block:
+    - name: Detect OS version
+      set_fact:
+        os_major_version: "{{ ansible_distribution_major_version }}"
+
+    - name: Set activation key based on OS version
+      set_fact:
+        activation_key: "{{ satellite_activation_key_rhel9 if os_major_version == '9' else satellite_activation_key_rhel8 }}"
+
+    - name: Display registration details
+      debug:
+        msg:
+          - "Registering to Satellite: {{ satellite_server }}"
+          - "Organization: {{ satellite_organization }}"
+          - "Activation Key: {{ activation_key }}"
+          - "OS Version: RHEL {{ os_major_version }}"
+
+    - name: Remove old katello-ca-consumer package (if exists)
+      yum:
+        name: katello-ca-consumer-*
+        state: absent
+      failed_when: false
+
+    - name: Install katello-ca-consumer package
+      yum:
+        name: "http://{{ satellite_server }}/pub/katello-ca-consumer-latest.noarch.rpm"
+        state: present
+        disable_gpg_check: yes
+
+    - name: Register to Satellite with activation key
+      redhat_subscription:
+        state: present
+        activationkey: "{{ activation_key }}"
+        org_id: "{{ satellite_organization }}"
+        force_register: yes
+      register: registration_result
+
+    - name: Verify registration
+      command: subscription-manager identity
+      register: verify_registration
+      changed_when: false
+
+    - name: Display registration success
+      debug:
+        msg: "✓ Successfully registered to Satellite: {{ satellite_server }}"
+      when: verify_registration.rc == 0
+
+  rescue:
+    - name: Registration failed
+      fail:
+        msg: "Failed to register to Satellite. Check activation keys and connectivity."

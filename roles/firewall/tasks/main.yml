@@ -1,0 +1,63 @@
+---
+# ============================================
+# FIREWALL ROLE - TASKS
+# ============================================
+# Purpose: Configure base firewall rules
+# ============================================
+
+- name: Install firewalld
+  yum:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld service is running and enabled
+  service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Allow ICMP from all
+  ansible.posix.firewalld:
+    protocol: icmp
+    zone: "{{ firewall_zone }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  when: firewall_enable_icmp | bool
+
+- name: Configure SSH access from predefined sources
+  ansible.posix.firewalld:
+    rich_rule: 'rule family="ipv4" source address="{{ item.address }}" service name="ssh" accept'
+    zone: "{{ firewall_zone }}"
+    state: enabled
+    permanent: true
+    immediate: true
+  loop: "{{ firewall_ssh_sources }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.address }})"
+
+- name: Remove SSH as a service from zone
+  ansible.posix.firewalld:
+    service: ssh
+    zone: "{{ firewall_zone }}"
+    state: disabled
+    permanent: true
+    immediate: true
+  when: firewall_remove_ssh_service | bool
+
+- name: Reload firewalld
+  command: firewall-cmd --reload
+  changed_when: false
+
+- name: List all firewall rules
+  command: firewall-cmd --list-all
+  register: firewall_rules
+  changed_when: false
+
+- name: Display firewall rules
+  debug:
+    var: firewall_rules.stdout_lines
+
+- name: Display success message
+  debug:
+    msg: "✓ Base firewall configuration applied"

@@ -1,0 +1,59 @@
+---
+# ============================================
+# AUDITD ROLE - TASKS
+# ============================================
+# Purpose: Install and configure system auditing
+# ============================================
+
+- name: Install audit package
+  yum:
+    name: audit
+    state: present
+
+- name: Ensure audit rules directory exists
+  file:
+    path: /etc/audit/rules.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0750'
+
+- name: Deploy audit rules
+  template:
+    src: audit-rules.j2
+    dest: "{{ auditd_rules_file }}"
+    owner: root
+    group: root
+    mode: '0640'
+  register: audit_rules_deployed
+  notify: Restart auditd
+
+- name: Load audit rules
+  command: augenrules --load
+  when: audit_rules_deployed.changed
+  register: rules_loaded
+
+- name: Enable and start auditd service
+  service:
+    name: auditd
+    state: started
+    enabled: yes
+  when: auditd_enable | bool
+
+- name: Verify auditd is running
+  command: auditctl -s
+  register: auditd_status
+  changed_when: false
+
+- name: Display auditd status
+  debug:
+    var: auditd_status.stdout_lines
+
+- name: List active audit rules
+  command: auditctl -l
+  register: active_rules
+  changed_when: false
+
+- name: Display active audit rules count
+  debug:
+    msg: "✓ Auditd configured with {{ active_rules.stdout_lines | length }} active rules"

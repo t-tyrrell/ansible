@@ -1,0 +1,89 @@
+# ============================================
+# AUDIT RULES - Security Focused
+# ============================================
+# Managed by Ansible - Do not edit manually
+# Role: auditd
+# Date: {{ ansible_date_time.iso8601 }}
+# ============================================
+
+# Remove any existing rules
+-D
+
+# Set buffer size
+-b {{ auditd_buffer_size }}
+
+# Set failure mode (0=silent 1=printk 2=panic)
+-f 1
+
+# ===== AUTHENTICATION AND AUTHORIZATION =====
+# Monitor authentication files
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/security/opasswd -p wa -k identity
+
+# Monitor sudoers configuration
+-w /etc/sudoers -p wa -k sudoers
+-w /etc/sudoers.d/ -p wa -k sudoers
+
+# Monitor PAM configuration
+-w /etc/pam.d/ -p wa -k pam
+-w /etc/nsswitch.conf -p wa -k pam
+
+# ===== SYSTEM CONFIGURATION =====
+# Monitor system configuration files
+-w /etc/ssh/sshd_config -p wa -k sshd_config
+-w /etc/hosts -p wa -k network_config
+-w /etc/hostname -p wa -k network_config
+-w /etc/resolv.conf -p wa -k network_config
+
+# Monitor SELinux configuration
+-w /etc/selinux/ -p wa -k selinux
+
+# ===== KERNEL MODULES =====
+# Monitor kernel module loading/unloading
+-w /sbin/insmod -p x -k kernel_modules
+-w /sbin/rmmod -p x -k kernel_modules
+-w /sbin/modprobe -p x -k kernel_modules
+-a always,exit -F arch=b64 -S init_module,delete_module -k kernel_modules
+
+# ===== TIME CHANGES =====
+# Monitor system time changes
+-a always,exit -F arch=b64 -S adjtimex,settimeofday -k time_change
+-a always,exit -F arch=b64 -S clock_settime -k time_change
+-w /etc/localtime -p wa -k time_change
+
+# ===== NETWORK CONFIGURATION =====
+# Monitor network configuration changes
+-a always,exit -F arch=b64 -S sethostname,setdomainname -k network_config
+-w /etc/sysconfig/network -p wa -k network_config
+-w /etc/sysconfig/network-scripts/ -p wa -k network_config
+
+# ===== FILE DELETIONS =====
+# Monitor file deletion events
+-a always,exit -F arch=b64 -S unlink,unlinkat,rename,renameat -F auid>=1000 -F auid!=4294967295 -k file_deletion
+
+# ===== LOGIN/LOGOUT EVENTS =====
+# Monitor login records
+-w /var/log/lastlog -p wa -k logins
+-w /var/run/faillock/ -p wa -k logins
+
+# Monitor session initiation
+-w /var/log/wtmp -p wa -k session
+-w /var/log/btmp -p wa -k session
+
+# ===== PRIVILEGE ESCALATION =====
+# Monitor privilege escalation commands
+-a always,exit -F path=/usr/bin/sudo -F perm=x -F auid>=1000 -F auid!=4294967295 -k privilege_escalation
+-a always,exit -F path=/usr/bin/su -F perm=x -F auid>=1000 -F auid!=4294967295 -k privilege_escalation
+
+# ===== CRITICAL SYSTEM CALLS =====
+# Monitor attempts to alter system mandatory access controls
+-a always,exit -F arch=b64 -S chmod,fchmod,fchmodat -F auid>=1000 -F auid!=4294967295 -k perm_mod
+-a always,exit -F arch=b64 -S chown,fchown,fchownat,lchown -F auid>=1000 -F auid!=4294967295 -k perm_mod
+
+# ===== AUDIT CONFIGURATION =====
+# Make audit configuration immutable (must be last)
+# Uncomment to prevent audit rules from being modified until reboot
+# -e 2

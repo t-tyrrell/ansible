@@ -1,0 +1,13 @@
+---
+# ============================================
+# SSH-HARDENING ROLE - DEFAULT VARIABLES
+# ============================================
+
+# Backup sshd_config before making changes
+ssh_backup_config: true
+
+# Restart SSH service after changes
+ssh_restart_service: true
+
+# Disable root login
+ssh_disable_root_login: true

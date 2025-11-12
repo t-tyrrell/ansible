@@ -1,0 +1,79 @@
+---
+# ============================================
+# LINUX SERVER BOOTSTRAP PLAYBOOK
+# ============================================
+# Purpose: Apply base configuration to new Linux servers
+# Usage: ansible-playbook bootstrap.yml --limit <target_hosts>
+# Skip roles: --skip-tags <tag_name>
+# Run specific roles: --tags <tag_name>
+# ============================================
+
+- name: Bootstrap New Linux Servers
+  hosts: all
+  gather_facts: yes
+  become: yes
+
+  vars:
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
+    report_file: "/opt/ansible/reports/bootstrap_report_{{ timestamp }}.txt"
+
+  roles:
+    - role: hostname
+      tags: hostname
+
+    - role: satellite
+      tags: satellite
+
+    - role: packages
+      tags: packages
+
+    - role: selinux
+      tags: selinux
+
+    - role: ssh-config
+      tags: ssh-config
+
+    - role: sudo
+      tags: sudo
+
+    - role: ssh-hardening
+      tags: ssh-hardening
+
+    - role: domain-join
+      tags: domain-join
+
+    - role: firewall
+      tags: firewall
+
+    - role: auditd
+      tags: auditd
+
+    - role: reboot
+      tags: reboot
+
+  post_tasks:
+    - name: Generate final bootstrap report
+      delegate_to: localhost
+      run_once: true
+      block:
+        - name: Create report summary
+          copy:
+            dest: "{{ report_file }}"
+            content: |
+              =====================================
+              Linux Server Bootstrap Report
+              Date: {{ ansible_date_time.date }} {{ ansible_date_time.time }}
+              =====================================
+
+              Bootstrapped Hosts:
+              {% for host in ansible_play_hosts_all %}
+              - {{ host }}
+              {% endfor %}
+
+              =====================================
+              End of Report
+              =====================================
+
+        - name: Display report location
+          debug:
+            msg: "Bootstrap report saved to: {{ report_file }}"

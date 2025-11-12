@@ -1,0 +1,10 @@
+# ============================================
+# SUDOERS DROP-IN FILE FOR {{ sudo_admin_group }}
+# ============================================
+# Managed by Ansible - Do not edit manually
+# Role: sudo
+# Date: {{ ansible_date_time.iso8601 }}
+# ============================================
+
+# Allow {{ sudo_admin_group }} AD group passwordless sudo access
+%{{ sudo_admin_group }}@{{ domain_name | default('northshore.local') }}  ALL=(ALL) {% if sudo_passwordless %}NOPASSWD: {% endif %}{{ sudo_commands }}
