@@ -17,3 +17,28 @@ Thumbs.db
 .idea/
 .vscode/
 __pycache__/
+
+# Vault passwords
+.vault_pass*
+
+# Logs
+logs/*.log
+
+# Reports
+reports/*.txt
+
+# Ansible
+*.retry
+.ansible/
+
+# Python
+*.pyc
+__pycache__/
+
+# OS
+.DS_Store
+*~
+
+# Temp
+1
+tmp/

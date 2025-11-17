@@ -30,17 +30,17 @@
     - role: selinux
       tags: selinux
 
-      # - role: ssh-config
-      # tags: ssh-config
+      # - role: ssh_config
+      # tags: ssh_config
 
     - role: sudo
       tags: sudo
 
-    - role: ssh-hardening
-      tags: ssh-hardening
+    - role: ssh_hardening
+      tags: ssh_hardening
 
-    - role: domain-join
-      tags: domain-join
+    - role: domain_join
+      tags: domain_join
 
     - role: firewall
       tags: firewall
