@@ -1,0 +1,31 @@
+- name: Test Role Detection
+  hosts: localhost
+  gather_facts: no
+  
+  tasks:
+    - name: Show roles path
+      debug:
+        msg: "Roles path: {{ lookup('config', 'DEFAULT_ROLES_PATH') }}"
+    
+    - name: Show playbook directory
+      debug:
+        msg: "Playbook dir: {{ playbook_dir }}"
+    
+    - name: Check if roles directory exists
+      stat:
+        path: "{{ playbook_dir }}/../roles"
+      register: roles_dir
+    
+    - name: Show roles directory status
+      debug:
+        msg: "Roles directory exists: {{ roles_dir.stat.exists }}"
+    
+    - name: List roles
+      shell: ls -1 {{ playbook_dir }}/../roles/
+      register: roles_list
+      when: roles_dir.stat.exists
+    
+    - name: Display roles
+      debug:
+        msg: "Available roles: {{ roles_list.stdout_lines }}"
+      when: roles_dir.stat.exists
