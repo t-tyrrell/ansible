@@ -17,3 +17,4 @@ satellite_activation_key_rhel9_nonprod: "rhel9-nonprod"
 
 # Skip registration if already registered
 satellite_skip_if_registered: true
+

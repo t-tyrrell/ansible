@@ -20,6 +20,44 @@
     validate: '/usr/sbin/visudo -cf %s'
   register: sudoers_created
 
+- name: Create sudoers drop-in file for service-satellite
+  copy:
+    content: |
+      # Managed by Ansible
+      service-satellite ALL=(ALL) NOPASSWD: ALL
+    dest: /etc/sudoers.d/91-service-satellite
+    owner: root
+    group: root
+    mode: '0440'
+    validate: '/usr/sbin/visudo -cf %s'
+  register: service_satellite_sudoers_created
+
+- name: Comment out passwordless wheel entry
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^%wheel\s+ALL=\(ALL\)\s+NOPASSWD:\s+ALL'
+    line: '# %wheel ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Uncomment password-required wheel entry
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    regexp: '^#?\s*%wheel\s+ALL=\(ALL\)\s+ALL'
+    line: '%wheel ALL=(ALL) ALL'
+    state: present
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Search for all wheel entries in sudoers
+  ansible.builtin.shell: grep -n 'wheel' /etc/sudoers
+  register: wheel_entries
+  failed_when: false
+  changed_when: false
+
+- name: Display all wheel entries
+  debug:
+    msg: "{{ wheel_entries.stdout_lines }}"
+
 - name: Display sudoers configuration status
   debug:
     msg: "{{ 'Sudoers file created' if sudoers_created.changed else 'Sudoers file already exists' }}"
@@ -29,7 +67,15 @@
     path: /etc/sudoers.d/90-g_linux
   register: sudoers_file
 
+- name: Verify service-satellite sudoers file exists
+  stat:
+    path: /etc/sudoers.d/91-service-satellite
+  register: service_satellite_sudoers_file
+
 - name: Display success message
   debug:
-    msg: "✓ Passwordless sudo configured for {{ sudo_admin_group }}"
-  when: sudoers_file.stat.exists
+    msg: 
+      - "✓ Passwordless sudo configured for {{ sudo_admin_group }}"
+      - "✓ Passwordless sudo configured for service-satellite user"
+  when: sudoers_file.stat.exists and service_satellite_sudoers_file.stat.exists
+
