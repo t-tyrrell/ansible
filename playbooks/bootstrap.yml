@@ -13,7 +13,7 @@
   gather_facts: yes
   become: yes
 
-  vars:
+  vars:      
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d_%H%M%S') }}"
     report_file: "/opt/ansible/reports/bootstrap_report_{{ timestamp }}.txt"
 
@@ -30,8 +30,8 @@
     - role: selinux
       tags: selinux
 
-    - role: ssh-config
-      tags: ssh-config
+      # - role: ssh-config
+      # tags: ssh-config
 
     - role: sudo
       tags: sudo

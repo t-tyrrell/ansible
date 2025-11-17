@@ -6,7 +6,8 @@
 # ============================================
 
 - name: Check if reboot is required
-  command: needs-restarting -r
+  ansible.builtin.shell: |
+        needs-restarting -r
   register: reboot_check
   failed_when: reboot_check.rc > 1
   changed_when: false

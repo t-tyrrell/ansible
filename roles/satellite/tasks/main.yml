@@ -45,7 +45,7 @@
         msg:
           - "Registering to Satellite: {{ satellite_server }}"
           - "Organization: {{ satellite_organization }}"
-          - "Activation Key: {{ activation_key }}"
+          - "Activation Key: {{ activation_key | trim }}"
           - "OS Version: RHEL {{ os_major_version }}"
           - "Environment: {{ 'Production' if is_production else 'Non-Production' }}"
 
@@ -74,7 +74,7 @@
       shell: >
         subscription-manager register
         --org="{{ satellite_organization }}"
-        --activationkey="{{ activation_key }}"
+        --activationkey="{{ activation_key | trim }}"
         --force
       register: registration_result
       changed_when: "'The system has been registered' in registration_result.stdout"
@@ -93,6 +93,7 @@
       command: subscription-manager status
       register: subscription_status
       changed_when: false
+      failed_when: false
 
     - name: Show subscription status
       debug:

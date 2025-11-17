@@ -9,3 +9,4 @@ packages_update_all: true
 # Base packages to install
 packages_base_packages:
   - vim
+  - yum-utils

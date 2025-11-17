@@ -12,7 +12,7 @@ firewall_enable_icmp: true
 # Predefined SSH access sources
 firewall_ssh_sources:
   - { name: "Danvers IS", address: "10.1.11.0/24" }
-  - { name: "VPN", address: "10.1.7.0/24" }
+  - { name: "VPN", address: "10.7.1.0/24" }
   - { name: "Arkanis", address: "10.1.9.95/32" }
   - { name: "Satellite", address: "10.1.15.46/32" }
   - { name: "Fred Jumpbox", address: "10.1.9.236/32" }

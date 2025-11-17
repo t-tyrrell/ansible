@@ -2,9 +2,9 @@
 # ============================================
 # DOMAIN-JOIN ROLE - DEFAULT VARIABLES
 # ============================================
-
+vars_files: /opt/ansible/.vault_files/vault.yml
 # AD domain configuration
-ad_domain: "{{ domain_name | default('NORTHSHORE.LOCAL') }}"
+ad_domain: "{{ domain_name | default('NORTHSHORE.LOCAL') | trim }}"
 
 # AD join credentials (should be in Ansible Vault)
 # Example: vault_ad_join_username: "domain_admin"
